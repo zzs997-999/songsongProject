@@ -20,41 +20,60 @@ public class SimpleRedisLock implements ILock {
 
     private static final String KEY_PREFIX = "lock:";
     private static final String ID_PREFIX = UUID.randomUUID().toString(true) + "-";
-    private static final DefaultRedisScript<Long> UNLOCK_SCRIPT;
+//    private static final DefaultRedisScript<Long> UNLOCK_SCRIPT;
+//    static {
+//        UNLOCK_SCRIPT = new DefaultRedisScript<>();
+//        UNLOCK_SCRIPT.setLocation(new ClassPathResource("unlock.lua"));
+//        UNLOCK_SCRIPT.setResultType(Long.class);
+//    }
+    private static final DefaultRedisScript<Long>UNLOCK_SCRIPT;
     static {
-        UNLOCK_SCRIPT = new DefaultRedisScript<>();
+        UNLOCK_SCRIPT=new DefaultRedisScript<>();
         UNLOCK_SCRIPT.setLocation(new ClassPathResource("unlock.lua"));
         UNLOCK_SCRIPT.setResultType(Long.class);
     }
 
+//    @Override
+//    public boolean tryLock(long timeoutSec) {
+//        // 获取线程标示
+//        String threadId = ID_PREFIX + Thread.currentThread().getId();
+//        // 获取锁
+//        Boolean success = stringRedisTemplate.opsForValue()
+//                .setIfAbsent(KEY_PREFIX + name, threadId, timeoutSec, TimeUnit.SECONDS);
+//        return Boolean.TRUE.equals(success);
+//    }
+
     @Override
     public boolean tryLock(long timeoutSec) {
-        // 获取线程标示
-        String threadId = ID_PREFIX + Thread.currentThread().getId();
-        // 获取锁
-        Boolean success = stringRedisTemplate.opsForValue()
-                .setIfAbsent(KEY_PREFIX + name, threadId, timeoutSec, TimeUnit.SECONDS);
+        String key=KEY_PREFIX+name;
+        String value=ID_PREFIX+Thread.currentThread().getId()+"";
+        Boolean success = stringRedisTemplate.opsForValue().setIfAbsent(key,value,timeoutSec,TimeUnit.SECONDS);
         return Boolean.TRUE.equals(success);
     }
 
+//    @Override
+//    public void unlock() {
+//        // 调用lua脚本
+//        stringRedisTemplate.execute(
+//                UNLOCK_SCRIPT,
+//                Collections.singletonList(KEY_PREFIX + name),
+//                ID_PREFIX + Thread.currentThread().getId());
+//    }
+//    @Override
+//    public void unlock(){
+//        String key=KEY_PREFIX+name;
+//        String id=stringRedisTemplate.opsForValue().get(key);
+//        String threadId=Thread.currentThread().getId()+"";
+//        if(id.equals(threadId)){
+//            stringRedisTemplate.delete(key);
+//        }
+//    }
     @Override
-    public void unlock() {
-        // 调用lua脚本
+    public void unlock(){
+        //调用lua脚本
         stringRedisTemplate.execute(
                 UNLOCK_SCRIPT,
-                Collections.singletonList(KEY_PREFIX + name),
-                ID_PREFIX + Thread.currentThread().getId());
+                Collections.singletonList(KEY_PREFIX+name),
+                ID_PREFIX+Thread.currentThread().getId());
     }
-    /*@Override
-    public void unlock() {
-        // 获取线程标示
-        String threadId = ID_PREFIX + Thread.currentThread().getId();
-        // 获取锁中的标示
-        String id = stringRedisTemplate.opsForValue().get(KEY_PREFIX + name);
-        // 判断标示是否一致
-        if(threadId.equals(id)) {
-            // 释放锁
-            stringRedisTemplate.delete(KEY_PREFIX + name);
-        }
-    }*/
 }

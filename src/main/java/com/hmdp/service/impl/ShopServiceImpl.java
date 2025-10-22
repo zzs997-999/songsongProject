@@ -1,6 +1,7 @@
 package com.hmdp.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.dto.Result;
@@ -44,23 +45,44 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     @Override
     public Result queryById(Long id) {
-        // 解决缓存穿透
+//        // 解决缓存穿透
         Shop shop = cacheClient
                 .queryWithPassThrough(CACHE_SHOP_KEY, id, Shop.class, this::getById, CACHE_SHOP_TTL, TimeUnit.MINUTES);
-
-        // 互斥锁解决缓存击穿
-        // Shop shop = cacheClient
-        //         .queryWithMutex(CACHE_SHOP_KEY, id, Shop.class, this::getById, CACHE_SHOP_TTL, TimeUnit.MINUTES);
-
-        // 逻辑过期解决缓存击穿
-        // Shop shop = cacheClient
-        //         .queryWithLogicalExpire(CACHE_SHOP_KEY, id, Shop.class, this::getById, 20L, TimeUnit.SECONDS);
-
+//
+//        // 互斥锁解决缓存击穿
+//        // Shop shop = cacheClient
+//        //         .queryWithMutex(CACHE_SHOP_KEY, id, Shop.class, this::getById, CACHE_SHOP_TTL, TimeUnit.MINUTES);
+//
+//        // 逻辑过期解决缓存击穿
+//        // Shop shop = cacheClient
+//        //         .queryWithLogicalExpire(CACHE_SHOP_KEY, id, Shop.class, this::getById, 20L, TimeUnit.SECONDS);
+//
         if (shop == null) {
             return Result.fail("店铺不存在！");
         }
-        // 7.返回
+//        // 7.返回
         return Result.ok(shop);
+        //获取查询的key
+//        String key=CACHE_SHOP_KEY+id;
+//        //从redis查询商铺数据
+//        String shopJson=stringRedisTemplate.opsForValue().get(key);
+//
+//        Shop shop=null;
+//        //把string转换为Shop
+//        //先判断缓存是否命中
+//        if(StrUtil.isNotBlank(shopJson)){
+//            //命中，返回
+//            shop= JSONUtil.toBean(shopJson,Shop.class);
+//            return Result.ok(shop);
+//        }
+//        //缓存未命中，去数据库里找
+//        shop=this.getById(id);
+//        if(Objects.isNull(shop)){
+//            return Result.fail("店铺不存在");
+//        }
+//        //店铺存在，写入redis之后返回
+//        stringRedisTemplate.opsForValue().set(key,JSONUtil.toJsonStr(shop));
+//        return Result.ok(shop);
     }
 
     @Override
