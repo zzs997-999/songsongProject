@@ -1,0 +1,3 @@
+roundRobin=com.zou.zourpc.loadbalancer.RoundRobinLoadBanlancer
+random=com.zou.zourpc.loadbalancer.RandomLoadBanlancer
+consistentHash=com.zou.zourpc.loadbalancer.ConsistentHashLoadBalancer
